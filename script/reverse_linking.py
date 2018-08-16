@@ -31,20 +31,18 @@ def get_ngram(tokens):
 
 
 
-def reverseLinking(sent, dbpedia_text, original):
+def reverse_linking(sent, dbpedia_text, original):
     tokens = sent.split()
     label = ["O"] * len(tokens)
     exact_match = False
 
     pattern = r'(^|\s)(%s)($|\s)' % (re.escape(dbpedia_text))
-    #print(pattern)
     entity_span = None
     if re.search(pattern, sent):
         entity_span = get_indices(tokens, dbpedia_text.split())
     pattern = r'(^|\s)(%s)($|\s)' % (re.escape(original))
     if re.search(pattern, sent):
         entity_span = get_indices(tokens, original.split())
-    #print(sent, dbpedia_text, original)
     if entity_span != None:
         exact_match = True
         for i in entity_span:
@@ -71,7 +69,7 @@ if __name__=="__main__":
     # processed_query = processed_text(repalce_punc(question))
     # processed_candidate = process_entity(repalce_punc(entity))
     # processed_candidate_original = process_original_entity(repalce_punc(entity))
-    # entity_text, label, exact_match = reverseLinking(processed_query, processed_candidate, processed_candidate_original)
+    # entity_text, label, exact_match = reverse_linking(processed_query, processed_candidate, processed_candidate_original)
     # print("{}\t{}\t{}\t{}\n".format(question, label, entity_text, str(exact_match)))
     # exit()
     folds = ["train", "valid", "test"]
@@ -94,7 +92,7 @@ if __name__=="__main__":
             processed_query = processed_text(repalce_punc(question))
             processed_candidate = process_entity(repalce_punc(entity))
             processed_candidate_original = process_original_entity(repalce_punc(entity))
-            entity_text, label, exact_match = reverseLinking(processed_query, processed_candidate, processed_candidate_original)
+            entity_text, label, exact_match = reverse_linking(processed_query, processed_candidate, processed_candidate_original)
             fout.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(idx, processed_query, sub, pre, direction, pre + "@" + direction + "@" + str(constraint), free_pre, label)) # entity_text, str(exact_match)
             if exact_match:
                 exact_match_counter += 1
