@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 
-# encodes the subject with url enconder from urllib
+# encodes the subject with url enconder from urllib.
 def make_subject(subject):
 	subject_page = subject.split("http://dbpedia.org/resource/")[1]
 	subject_encoded = urllib.parse.quote(subject_page)
@@ -15,12 +15,13 @@ def make_subject(subject):
 	return subject_url
 
 
-
 def processInput(item):
-# finding the redirects list for each subject
+# finds the redirects list for each subject.
 	redirected_pages = []
 	redirected_pages.append(item["Subject"])
 	subject = item["Subject"]
+
+	# if there is (") in the subject, fix it with urlencoder. This is the only case that needs urlencode.
 	if ('"' in subject):
 		subject = make_subject(subject)
 
@@ -30,13 +31,24 @@ def processInput(item):
 	sparql.setReturnFormat(JSON)
 	results = sparql.query().convert()
 
+
 	for result in results["results"]["bindings"]:
-	    redirected_pages.append(result["redirects"]["value"])
+		redirected_pages.append(result["redirects"]["value"])
+
+	# query must be forward
+	if (len(redirected_pages) == 1):
+		q = "SELECT" + " *" + " {" + " <{}>".format(subject) + " <http://dbpedia.org/ontology/wikiPageRedirects> ?redirects }"
+		sparql = SPARQLWrapper("http://dbpedia.org/sparql")
+		sparql.setQuery(q)
+		sparql.setReturnFormat(JSON)
+		results = sparql.query().convert()
+		for result in results["results"]["bindings"]:
+			redirected_pages.append(result["redirects"]["value"])
 
 
 	item["Subject"] = redirected_pages
 	
-	# finding objects for each subject and predicate
+	# finds objects for each subject and predicate.
 	predicateList = item["PredicateList"]
 	objectList = []
 
@@ -85,8 +97,8 @@ def processInput(item):
 		item["ObjectList"] = objectList
 	else:
 		print("No Objects Found! \t" + item["Query"])
-		# print(subject + "\t" + q)
 		item["ObjectList"] = objectList
+		# sets (ObjectList = []) for queries that have no objects.
 
 	return item
 
@@ -104,10 +116,10 @@ def main():
 	data["Questions"] = results
 
 	with open('output.json', 'w') as outfile:
-	    outfile.write(json.dumps(data, indent=4, sort_keys=True))
+		outfile.write(json.dumps(data, indent=4, sort_keys=True))
 	  
 	outfile.close()
 
 
 if __name__ == "__main__":
-    main()
+	main()
